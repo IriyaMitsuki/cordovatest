@@ -16,20 +16,42 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Install Visual Studio Build Tools
+        run: |
+          choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.Universal --add Microsoft.VisualStudio.Workload.MSBuildTools"
+
+      - name: Install Windows SDK
+        run: |
+          choco install -y windows-sdk-10.1
+
+      - name: Clear npm cache
+        run: npm cache clean --force
+
       - name: Install Cordova
-        run: npm install -g cordova
+        run: npm install -g cordova@12.0.0
+
+      - name: Check Cordova version and platforms
+        run: |
+          cordova --version
+          cordova platform list
 
       - name: Create Cordova project
         run: cordova create cordova-stock-app com.example.stockapp StockApp
 
+      - name: Remove potential conflicting windows folder
+        run: if exist cordova-stock-app\node_modules\windows rmdir /S /Q cordova-stock-app\node_modules\windows
+
       - name: Add Windows platform
-        run: cd cordova-stock-app && cordova platform add windows
+        run: cd cordova-stock-app && cordova platform add windows@7.1.0
 
       - name: Build for Windows
-        run: cd cordova-stock-app && cordova build windows --release
+        run: cd cordova-stock-app && cordova build windows --debug
+
+      - name: Check build output
+        run: dir cordova-stock-app/platforms/windows /s
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: stock-windows-app
-          path: cordova-stock-app/platforms/windows/build/outputs/appx/*.appx
+          path: cordova-stock-app/platforms/windows/AppPackages/**/*.appx
