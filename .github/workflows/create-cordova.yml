@@ -1,0 +1,35 @@
+name: Create Stock Cordova App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Create Cordova project
+        run: cordova create cordova-stock-app com.example.stockapp StockApp
+
+      - name: Add Windows platform
+        run: cd cordova-stock-app && cordova platform add windows
+
+      - name: Build for Windows
+        run: cd cordova-stock-app && cordova build windows --release
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: stock-windows-app
+          path: cordova-stock-app/platforms/windows/build/outputs/appx/*.appx
